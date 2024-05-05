@@ -92,7 +92,8 @@ def perform_sync(source, destination, dirlist, filelist, options,
                                        f"{options} {src} {remote}:{dst}"])
                 if retry >= max_retries:
                     print(f"Reached maximum amount of retries "
-                          f"({max_retries=}). Sync failed. Aborting.")
+                          f"({max_retries=}). Sync job {sync_object} failed. "
+                          f"Aborting.")
                     break
 
         else:
