@@ -40,11 +40,11 @@ def get_sync(path, depth):
             if len(dirs) != 0:
                 for dir in dirs:
                     abspath = os.path.join(root, dir)
-                    dirlist.append(abspath[len(path):])
+                    dirlist.append(abspath[len(path)+len(os.path.sep):])
             if len(files) != 0:
                 for file in files:
                     abspath = os.path.join(root, file)
-                    filelist.append(abspath[len(path):])
+                    filelist.append(abspath[len(path)+len(os.path.sep):])
 
     return dirlist, filelist
 
@@ -75,9 +75,6 @@ def perform_sync(source, destination, dirlist, filelist, options,
     sync_objects = dirlist + filelist
 
     remote, remote_dir = destination.split(":")
-    remote_dir = os.path.abspath(remote_dir)
-    print(f"{remote=}")
-    print(f"{remote_dir=}")
 
     for sync_object in sync_objects:
         src = os.path.join(source, sync_object)
