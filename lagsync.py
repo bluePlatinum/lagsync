@@ -65,6 +65,8 @@ def perform_sync(source, destination, dirlist, filelist, options,
         paths relative to src.
     :param options: The options to pass to rsync.
     :type options: str
+    :param max_retries: the maximum amount of retries before the job fails
+    :type max_retries: int
     :return: None
     """
     try:
