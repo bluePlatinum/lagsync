@@ -79,9 +79,9 @@ def perform_sync(source, destination, dirlist, filelist, options,
     print(f"{remote=}")
     print(f"{remote_dir=}")
 
-    for object in sync_objects:
-        src = os.path.join(source, object)
-        dst = os.path.join(remote_dir, object)
+    for sync_object in sync_objects:
+        src = os.path.join(source, sync_object)
+        dst = os.path.join(remote_dir, sync_object)
 
         if not dry_run:
             retry = 0
