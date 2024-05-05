@@ -14,13 +14,13 @@ def get_depth(rootpath, path):
     :return: the depth of the given path
     :rtype: int
     """
-    return path[len(rootpath) + len(os.path.sep):].count(os.path.sep)
+    return path[len(rootpath):].count(os.path.sep)
 
 
-def get_dirs(path, depth):
+def get_sync(path, depth):
     """
-    Return a list of all directories to be synced. It will recurse up to a
-    depth given by the parameter `depth`.
+    Return a list of all directories and files to be synced. It will recurse up
+    to a depth given by the parameter `depth`.
 
     :param path: the root of the directory tree
     :type path: str
@@ -30,12 +30,17 @@ def get_dirs(path, depth):
     :rtype: list
     """
     dirlist = list()
+    filelist = list()
     path = os.path.abspath(path)
 
     for root, dirs, files in os.walk(path, topdown=True):
         current_depth = get_depth(path, root)
         if current_depth == depth - 1:
-            dirlist.append(dirs)
+            if len(dirs) != 0:
+                for dir in dirs:
+                    dirlist.append(os.path.join(root, dir))
+            if len(files) != 0:
+                for file in files:
+                    filelist.append(os.path.join(root, file))
 
-    return dirlist
-
+    return dirlist, filelist
