@@ -1,4 +1,5 @@
 import os
+import subprocess
 
 
 def get_depth(rootpath, path):
@@ -38,9 +39,62 @@ def get_sync(path, depth):
         if current_depth == depth - 1:
             if len(dirs) != 0:
                 for dir in dirs:
-                    dirlist.append(os.path.join(root, dir))
+                    abspath = os.path.join(root, dir)
+                    dirlist.append(abspath[len(path):])
             if len(files) != 0:
                 for file in files:
-                    filelist.append(os.path.join(root, file))
+                    abspath = os.path.join(root, file)
+                    filelist.append(abspath[len(path):])
 
     return dirlist, filelist
+
+
+def perform_sync(source, destination, dirlist, filelist, options,
+                 max_retries=10, *args, **kwargs):
+    """
+    Perform the syncronization with rsync.
+
+    :param source: the source directory
+    :type source: str
+    :param destination: the destination to sync to
+    :type destination: str
+    :param dirlist: The list of all directories to be synched. Needs to be a
+        list of paths relative to src.
+    :type dirlist: list
+    :param filelist: The list of all files to be synched. Needs to be a list of
+        paths relative to src.
+    :param options: The options to pass to rsync.
+    :type options: str
+    :return: None
+    """
+    try:
+        dry_run = kwargs['dry_run']
+    except KeyError:
+        dry_run = False
+
+    sync_objects = dirlist + filelist
+
+    remote, remote_dir = destination.split(":")
+    remote_dir = os.path.abspath(remote_dir)
+    print(f"{remote=}")
+    print(f"{remote_dir=}")
+
+    for object in sync_objects:
+        src = os.path.join(source, object)
+        dst = os.path.join(remote_dir, object)
+
+        if not dry_run:
+            retry = 0
+            proc = subprocess.run(["rsync", f"{options} {src} {remote}:{dst}"])
+
+            while proc.returncode != 0:
+                retry += 1
+                proc = subprocess.run(["rsync",
+                                       f"{options} {src} {remote}:{dst}"])
+                if retry >= max_retries:
+                    print(f"Reached maximum amount of retries "
+                          f"({max_retries=}). Sync failed. Aborting.")
+                    break
+
+        else:
+            print(f"rsync {options} {src} {remote}:{dst}")
