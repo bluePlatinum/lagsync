@@ -1,3 +1,6 @@
+#!/usr/bin/env python3
+
+import argparse
 import os
 import subprocess
 
@@ -88,17 +91,52 @@ def perform_sync(source, destination, dirlist, filelist, options,
 
         if not dry_run:
             retry = 0
-            proc = subprocess.run(["rsync", f"{options} {src} {remote}:{dst}"])
+            proc = subprocess.run(["rsync", f"-{options} {src} {remote}:{dst}"])
 
             while proc.returncode != 0:
                 retry += 1
                 proc = subprocess.run(["rsync",
-                                       f"{options} {src} {remote}:{dst}"])
+                                       f"-{options} {src} {remote}:{dst}"])
                 if retry >= max_retries:
                     print(f"Reached maximum amount of retries "
-                          f"({max_retries=}). Sync job {sync_object} failed. "
-                          f"Aborting.")
+                          f"(max_retries={max_retries}). Sync job "
+                          f"{sync_object} failed. Aborting.")
                     break
 
         else:
-            print(f"rsync {options} {src} {remote}:{dst}")
+            print(f"rsync -{options} {src} {remote}:{dst}")
+
+
+if __name__ == '__main__':
+    description = """
+    Lagsync is an rsync based utility for syncing files over flakey connections.
+    It accomplishes this by splitting the sync process into smaller chunks.
+    These chunks are calculated by providing a depth. The directories at the
+    given depth in the directory tree are then separately synced to the
+    destination.
+    """
+    parser = argparse.ArgumentParser(description=description)
+    parser.add_argument("source", metavar="src",
+                        help="The source (rootpath) of the files to be synced")
+    parser.add_argument("destination", metavar="dst",
+                        help="The destination for the sync.")
+    parser.add_argument("-o", "--rsync-options", metavar="rsync_opt",
+                        default="rtlz",
+                        help="Options for the rsync job. Default is 'rtlz'")
+    parser.add_argument("-d", "--depth", type=int, default=2,
+                        help="The depth of the directory tree which will be"
+                             "used for chunking of the rsync jobs.")
+    parser.add_argument("-r", "--max-retries", type=int, default=10,
+                        help="The maximum amount of retries for the rsync job"
+                             "per chunk")
+    parser.add_argument("--dry-run", action="store_true",
+                        help="Perform a dry run, which will only print out"
+                             "the resync jobs instead of running them.")
+
+    args = parser.parse_args()
+
+    # perform sync
+    dirlist, filelist = get_sync(args.source, args.depth)
+    perform_sync(args.source, args.destination, dirlist, filelist,
+                 args.rsync_options, max_retries=args.max_retries,
+                 dry_run=args.dry_run)
