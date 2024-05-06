@@ -74,7 +74,8 @@ def perform_sync(source, destination, dirlist, filelist, options,
     :type options: str
     :param max_retries: the maximum amount of retries before the job fails
     :type max_retries: int
-    :return: None
+    :return: exit code
+    :rtype: int
     """
     try:
         dry_run = kwargs['dry_run']
@@ -101,10 +102,12 @@ def perform_sync(source, destination, dirlist, filelist, options,
                     print(f"Reached maximum amount of retries "
                           f"(max_retries={max_retries}). Sync job "
                           f"{sync_object} failed. Aborting.")
-                    break
+                    return 1
 
         else:
             print(f"rsync -{options} {src} {remote}:{dst}")
+
+    return 0
 
 
 def main():
@@ -142,9 +145,9 @@ def main():
 
     # perform sync
     dirlist, filelist = get_sync(args.source, args.depth)
-    perform_sync(args.source, args.destination, dirlist, filelist,
-                 args.rsync_options, max_retries=args.max_retries,
-                 dry_run=args.dry_run)
+    return perform_sync(args.source, args.destination, dirlist, filelist,
+                        args.rsync_options, max_retries=args.max_retries,
+                        dry_run=args.dry_run)
 
 
 if __name__ == '__main__':
