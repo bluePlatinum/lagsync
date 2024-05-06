@@ -85,7 +85,12 @@ def perform_sync(source, destination, dirlist, filelist, options,
 
     sync_objects = dirlist + filelist
 
-    remote, remote_dir = destination.split(":")
+    if len(destination.split(":")) == 2:
+        remote, remote_dir = destination.split(":")
+        remote += ":"       # add the : delimiter to the remote variable
+    else:
+        remote = ""
+        remote_dir = destination
 
     for sync_object in sync_objects:
         src = os.path.join(source, sync_object)
@@ -95,13 +100,13 @@ def perform_sync(source, destination, dirlist, filelist, options,
 
         if not dry_run:
             retry = 0
-            proc = subprocess.run(["rsync", f"-{options} {src} {remote}:{dst}"])
+            proc = subprocess.run(["rsync", f"-{options} {src} {remote}{dst}"])
 
             while proc.returncode != 0:
                 logging.info(f"Failed sync of {src}. Retrying (retry={retry})")
                 retry += 1
                 proc = subprocess.run(["rsync",
-                                       f"-{options} {src} {remote}:{dst}"])
+                                       f"-{options} {src} {remote}{dst}"])
                 if retry >= max_retries:
                     logging.critical(f"Reached maximum amount of retries "
                                      f"(max_retries={max_retries}). Sync job "
@@ -109,7 +114,7 @@ def perform_sync(source, destination, dirlist, filelist, options,
                     return 1
 
         else:
-            print(f"rsync -{options} {src} {remote}:{dst}")
+            print(f"rsync -{options} {src} {remote}{dst}")
 
     return 0
 
