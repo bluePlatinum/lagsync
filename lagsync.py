@@ -36,6 +36,10 @@ def get_sync(path, depth):
 
     for root, dirs, files in os.walk(path, topdown=True):
         current_depth = get_depth(path, root)
+        if current_depth < depth - 1:
+            for file in files:
+                abspath = os.path.join(root, file)
+                filelist.append(abspath[len(path)+len(os.path.sep):])
         if current_depth == depth - 1:
             if len(dirs) != 0:
                 for dir in dirs:
