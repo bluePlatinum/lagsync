@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 
 import argparse
+import logging
 import os
 import subprocess
 
@@ -90,18 +91,21 @@ def perform_sync(source, destination, dirlist, filelist, options,
         src = os.path.join(source, sync_object)
         dst = os.path.join(remote_dir, sync_object)
 
+        logging.info(f"Syncing {src}")
+
         if not dry_run:
             retry = 0
             proc = subprocess.run(["rsync", f"-{options} {src} {remote}:{dst}"])
 
             while proc.returncode != 0:
+                logging.info(f"Failed sync of {src}. Retrying (retry={retry})")
                 retry += 1
                 proc = subprocess.run(["rsync",
                                        f"-{options} {src} {remote}:{dst}"])
                 if retry >= max_retries:
-                    print(f"Reached maximum amount of retries "
-                          f"(max_retries={max_retries}). Sync job "
-                          f"{sync_object} failed. Aborting.")
+                    logging.critical(f"Reached maximum amount of retries "
+                                     f"(max_retries={max_retries}). Sync job "
+                                     f"{sync_object} failed. Aborting.")
                     return 1
 
         else:
@@ -140,8 +144,14 @@ def main():
     parser.add_argument("--dry-run", action="store_true",
                         help="Perform a dry run, which will only print out"
                              "the resync jobs instead of running them.")
+    parser.add_argument("-v", "--verbose", action="store_true",
+                        help="verbose mode")
 
     args = parser.parse_args()
+
+    # enable verbose logging
+    if args.verbose:
+        logging.basicConfig(level=logging.INFO)
 
     # perform sync
     dirlist, filelist = get_sync(args.source, args.depth)
