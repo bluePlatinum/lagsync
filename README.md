@@ -1,2 +1,2 @@
 # lagsync
-An rsync based backup utility for laggy connections
+A rsync based backup utility for laggy connections
