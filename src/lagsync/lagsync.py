@@ -107,14 +107,19 @@ def perform_sync(source, destination, dirlist, filelist, options,
             print(f"rsync -{options} {src} {remote}:{dst}")
 
 
-if __name__ == '__main__':
-    description = """
-    Lagsync is an rsync based utility for syncing files over flakey connections.
-    It accomplishes this by splitting the sync process into smaller chunks.
-    These chunks are calculated by providing a depth. The directories at the
-    given depth in the directory tree are then separately synced to the
-    destination.
+def main():
     """
+    The main function to be run for the script in cli mode.
+    :return: Exitcode
+    :rtype: int
+    """
+    description = """
+        Lagsync is an rsync based utility for syncing files over flakey connections.
+        It accomplishes this by splitting the sync process into smaller chunks.
+        These chunks are calculated by providing a depth. The directories at the
+        given depth in the directory tree are then separately synced to the
+        destination.
+        """
     parser = argparse.ArgumentParser(description=description)
     parser.add_argument("source", metavar="src",
                         help="The source (rootpath) of the files to be synced")
@@ -140,3 +145,7 @@ if __name__ == '__main__':
     perform_sync(args.source, args.destination, dirlist, filelist,
                  args.rsync_options, max_retries=args.max_retries,
                  dry_run=args.dry_run)
+
+
+if __name__ == '__main__':
+    main()
