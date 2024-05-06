@@ -156,7 +156,7 @@ def main():
                              "the resync jobs instead of running them.")
     parser.add_argument("-v", "--verbose", action="store_true",
                         help="verbose mode")
-    parser.add_argument("--delay", default=3,
+    parser.add_argument("--delay", default=3, type=int,
                         help="Time to delay (in seconds) after failed chunk."
                              "Default is 3.")
 
