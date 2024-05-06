@@ -100,13 +100,14 @@ def perform_sync(source, destination, dirlist, filelist, options,
 
         if not dry_run:
             retry = 0
-            proc = subprocess.run(["rsync", f"-{options} {src} {remote}{dst}"])
+            proc = subprocess.run(
+                ["rsync", f"-{options}", src, f"{remote}{dst}"])
 
             while proc.returncode != 0:
                 logging.info(f"Failed sync of {src}. Retrying (retry={retry})")
                 retry += 1
-                proc = subprocess.run(["rsync",
-                                       f"-{options} {src} {remote}{dst}"])
+                proc = subprocess.run(
+                    ["rsync", f"-{options}", src, f"{remote}{dst}"])
                 if retry >= max_retries:
                     logging.critical(f"Reached maximum amount of retries "
                                      f"(max_retries={max_retries}). Sync job "
