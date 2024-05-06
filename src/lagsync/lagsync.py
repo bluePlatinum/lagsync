@@ -4,6 +4,7 @@ import argparse
 import logging
 import os
 import subprocess
+import time
 
 
 def get_depth(rootpath, path):
@@ -58,7 +59,7 @@ def get_sync(path, depth):
 
 
 def perform_sync(source, destination, dirlist, filelist, options,
-                 max_retries=10, *args, **kwargs):
+                 max_retries=10, fail_delay=3, *args, **kwargs):
     """
     Perform the syncronization with rsync.
 
@@ -75,6 +76,8 @@ def perform_sync(source, destination, dirlist, filelist, options,
     :type options: str
     :param max_retries: the maximum amount of retries before the job fails
     :type max_retries: int
+    :param fail_delay: the time to delay after failed sync
+    :type fail_delay: float
     :return: exit code
     :rtype: int
     """
@@ -105,6 +108,7 @@ def perform_sync(source, destination, dirlist, filelist, options,
 
             while proc.returncode != 0:
                 logging.info(f"Failed sync of {src}. Retrying (retry={retry})")
+                time.sleep(fail_delay)
                 retry += 1
                 proc = subprocess.run(
                     ["rsync", f"-{options}", src, f"{remote}{dst}"])
@@ -152,6 +156,9 @@ def main():
                              "the resync jobs instead of running them.")
     parser.add_argument("-v", "--verbose", action="store_true",
                         help="verbose mode")
+    parser.add_argument("--delay", default=3,
+                        help="Time to delay (in seconds) after failed chunk."
+                             "Default is 3.")
 
     args = parser.parse_args()
 
@@ -163,7 +170,7 @@ def main():
     dirlist, filelist = get_sync(args.source, args.depth)
     return perform_sync(args.source, args.destination, dirlist, filelist,
                         args.rsync_options, max_retries=args.max_retries,
-                        dry_run=args.dry_run)
+                        fail_delay=args.delay, dry_run=args.dry_run)
 
 
 if __name__ == '__main__':
