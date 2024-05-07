@@ -88,6 +88,8 @@ def perform_sync(source, destination, dirlist, filelist, options,
 
     sync_objects = dirlist + filelist
 
+    failed = list()
+
     if len(destination.split(":")) == 2:
         remote, remote_dir = destination.split(":")
         remote += ":"       # add the : delimiter to the remote variable
@@ -115,11 +117,17 @@ def perform_sync(source, destination, dirlist, filelist, options,
                 if retry >= max_retries:
                     logging.critical(f"Reached maximum amount of retries "
                                      f"(max_retries={max_retries}). Sync job "
-                                     f"{sync_object} failed. Aborting.")
-                    return 1
+                                     f"{sync_object} failed. Skipping chunk.")
+                    failed.append(sync_object)
 
         else:
             print(f"rsync -{options} {src} {remote}{dst}")
+
+    if len(failed) != 0:
+        logging.critical("Failed to sync the following directories:")
+        for fail in failed:
+            logging.critical(fail)
+        return 1
 
     return 0
 
