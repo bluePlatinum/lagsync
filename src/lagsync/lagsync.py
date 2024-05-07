@@ -109,9 +109,9 @@ def perform_sync(source, destination, dirlist, filelist, options,
                 ["rsync", f"-{options}", src, f"{remote}{dst}"])
 
             while proc.returncode != 0:
+                retry += 1
                 logging.info(f"Failed sync of {src}. Retrying (retry={retry})")
                 time.sleep(fail_delay)
-                retry += 1
                 proc = subprocess.run(
                     ["rsync", f"-{options}", src, f"{remote}{dst}"])
                 if retry >= max_retries:
@@ -119,6 +119,7 @@ def perform_sync(source, destination, dirlist, filelist, options,
                                      f"(max_retries={max_retries}). Sync job "
                                      f"{sync_object} failed. Skipping chunk.")
                     failed.append(sync_object)
+                    break
 
         else:
             print(f"rsync -{options} {src} {remote}{dst}")
